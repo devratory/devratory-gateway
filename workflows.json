@@ -1,0 +1,8 @@
+[
+    {
+        "name": "createEvent",
+        "httpMethod": "post",
+        "url": "/events",
+        "steps": []
+    }
+]
