@@ -10,7 +10,7 @@ export function defineEndpoints(app: Express, pathToWorkflowsJSON: string) {
     }
 
     const WORKFLOWS: IWorkflow[] = JSON.parse(fs.readFileSync(pathToWorkflowsJSON, 'utf8'));
-    console.log(`Parsed ${WORKFLOWS.length} workflow${WORKFLOWS.length > 1 ? 's' : ''}.`);
+    console.log(`Parsed ${WORKFLOWS.length} workflows.`);
 
     for (let workflow of WORKFLOWS) {
       app[workflow.httpMethod](workflow.url, async (request: Request, response: Response, next: NextFunction) => {

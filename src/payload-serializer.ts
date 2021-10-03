@@ -1,5 +1,11 @@
+import { ROOT_LEVEL_ASSIGNMENT_KEY } from './constants';
 import { Scope } from './scope';
 import { IStep, IStepPayload } from './step.interface';
+
+function isStep(value: IStep | IStepPayload) {
+  // If $$type is defined, we'll assume this is a step
+  return typeof value.$$type !== 'undefined';
+}
 
 export class PayloadSerializer {
   constructor(
@@ -9,18 +15,17 @@ export class PayloadSerializer {
 
   async serialize(payload: IStepPayload) {
     console.debug('Serializing payload', JSON.stringify(payload, null, 2));
-    const keys = Object.keys(payload).filter((k) => k !== '...');
+    const keys = Object.keys(payload).filter((k) => k !== ROOT_LEVEL_ASSIGNMENT_KEY);
     let serialized = {};
 
-    if (payload['...']) {
+    if (payload[ROOT_LEVEL_ASSIGNMENT_KEY]) {
       // If we have a root level assignment we should start by serializing it
-      serialized = await this._serializeValue(payload['...']);
-      console.log('Serialized root level assignment', payload['...'], serialized);
+      serialized = await this._serializeValue(payload[ROOT_LEVEL_ASSIGNMENT_KEY]);
+      console.log('Serialized root level assignment', payload[ROOT_LEVEL_ASSIGNMENT_KEY], serialized);
     }
 
-    console.log('Serializing keys', keys);
-
     // And then serialize each key separately
+    console.log('Serializing keys', keys);
     for (let key of keys) {
       serialized[key] = await this._serializeValue(payload[key]);
     }
@@ -33,12 +38,8 @@ export class PayloadSerializer {
       return await this._serializeString(value);
     } else if (typeof value === 'object') {
       // Check if this is a step to execute
-      if (value.$$type) {
-        return await this._executeStep(value as IStep);
-      } else {
-        // otherwise serialize as payload
-        return await this.serialize(value as IStepPayload);
-      }
+      // We will assume that if there is a
+      return isStep(value) ? this._executeStep(value as IStep) : this.serialize(value as IStepPayload);
     } else {
       return value;
     }
@@ -58,7 +59,7 @@ export class PayloadSerializer {
 
     if (!serializedValue) {
       console.warn(
-        `Value for ${valuePath} was not found. Make sure the execution order is correct and scope has this path`, this._scope
+        `Value for ${valuePath} was not found. Make sure the execution order is correct and scope has this path`
       );
     }
 
