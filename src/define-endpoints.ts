@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response, Express } from 'express';
 import fs from 'fs';
-import { Workflow } from './workflow.executor';
+import { WorkflowExecutor } from './workflow.executor';
 import { IWorkflow } from './workflow.interface';
 
 export function defineEndpoints(app: Express, pathToWorkflowsJSON: string) {
@@ -14,7 +14,7 @@ export function defineEndpoints(app: Express, pathToWorkflowsJSON: string) {
 
     for (let workflow of WORKFLOWS) {
       app[workflow.httpMethod](workflow.url, async (request: Request, response: Response, next: NextFunction) => {
-        await new Workflow(workflow).execute(request, response, next);
+        await new WorkflowExecutor(workflow, request, response, next).execute();
       });
     }
   } catch (err) {

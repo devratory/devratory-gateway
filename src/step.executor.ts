@@ -1,5 +1,4 @@
 import { get } from 'lodash';
-import { RETURN_RESULT_SCOPE_KEY } from './constants';
 import { msService } from './ms.service';
 import { Scope } from './scope';
 import { IStep, StepType } from './step.interface';
@@ -7,7 +6,6 @@ import { IStep, StepType } from './step.interface';
 export class StepExecutor {
   private _stepHandlerByType = {
     [StepType.MicroserviceCall]: this._execMicroserviceCall.bind(this),
-    [StepType.ReturnResult]: this._execReturnResult.bind(this),
   };
 
   constructor(private _scope: Scope) {}
@@ -20,10 +18,6 @@ export class StepExecutor {
     } else {
       console.log('No handler found for step type', step.$$type);
     }
-  }
-
-  private _execReturnResult(step: IStep) {
-    this._scope.set(RETURN_RESULT_SCOPE_KEY, step.payload);
   }
 
   private async _execMicroserviceCall<T = any>(step: IStep) {

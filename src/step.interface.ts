@@ -2,7 +2,6 @@ export enum StepType {
   MicroserviceCall = 'MS_CALL',
   ExecuteCode = 'EXEC_CODE',
   Switch = 'SWITCH',
-  ReturnResult = 'RETURN_RESULT',
 }
 
 export interface IStep {

@@ -32,15 +32,11 @@
           "userId": "{{request.user.id}}",
           "populate": true
         }
-      },
-      {
-        "name": "ReturnResult",
-        "$$type": "RETURN_RESULT",
-        "payload": {
-          "...": "{{CreateEvent.data}}",
-          "group": "{{CreateGroup}}"
-        }
       }
-    ]
+    ],
+    "output": {
+      "...": "{{CreateEvent.data}}",
+      "group": "{{CreateGroup}}"
+    }
   }
 ]
