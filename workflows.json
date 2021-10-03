@@ -1,8 +1,46 @@
 [
-    {
-        "name": "createEvent",
-        "httpMethod": "post",
-        "url": "/events",
-        "steps": []
-    }
+  {
+    "name": "createEvent",
+    "httpMethod": "post",
+    "url": "/events",
+    "steps": [
+      {
+        "name": "CreateEvent",
+        "$$type": "MS_CALL",
+        "pattern": "@event/create",
+        "payload": {
+          "event": {
+            "...": "{{request.body}}",
+            "group": {
+              "name": "CreateGroup",
+              "$$type": "MS_CALL",
+              "readFrom": "data.id",
+              "pattern": "@group/create",
+              "payload": {
+                "userId": "{{request.user.id}}",
+                "group": {
+                  "category": "{{request.body.category}}",
+                  "title": "{{request.body.title}}",
+                  "anyoneCanAcceptRequest": "{{request.body.anyoneCanAcceptRequest}}",
+                  "anyoneCanModifyGroup": "{{request.body.anyoneCanModifyGroup}}",
+                  "approveNewUsers": "{{request.body.approveNewUsers}}"
+                },
+                "populate": false
+              }
+            }
+          },
+          "userId": "{{request.user.id}}",
+          "populate": true
+        }
+      },
+      {
+        "name": "ReturnResult",
+        "$$type": "RETURN_RESULT",
+        "payload": {
+          "...": "{{CreateEvent.data}}",
+          "group": "{{CreateGroup}}"
+        }
+      }
+    ]
+  }
 ]
