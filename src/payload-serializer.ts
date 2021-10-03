@@ -37,10 +37,10 @@ export class PayloadSerializer {
     if (typeof value === 'string') {
       return await this._serializeString(value);
     } else if (typeof value === 'object') {
-      // Check if this is a step to execute
-      // We will assume that if there is a
+      // Check if this is a step to execute, otherwise serialize as a payload
       return isStep(value) ? this._executeStep(value as IStep) : this.serialize(value as IStepPayload);
     } else {
+      // Value doesn't need serialization
       return value;
     }
   }
