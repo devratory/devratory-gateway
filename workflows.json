@@ -1,35 +1,35 @@
 [
   {
-    "name": "createEvent",
+    "name": "CreateEvent",
     "httpMethod": "post",
     "url": "/events",
     "steps": [
       {
-        "name": "CreateEvent",
         "$$type": "MS_CALL",
+        "name": "CreateEvent",
         "pattern": "@event/create",
         "payload": {
           "event": {
             "...": "{{request.body}}",
             "group": {
-              "name": "CreateGroup",
               "$$type": "MS_CALL",
+              "name": "CreateGroup",
               "readFrom": "data.id",
               "pattern": "@group/create",
               "payload": {
-                "userId": "{{request.user.id}}",
+                "userId": "{{user.id}}",
                 "group": {
-                  "category": "{{request.body.category}}",
-                  "title": "{{request.body.title}}",
-                  "anyoneCanAcceptRequest": "{{request.body.anyoneCanAcceptRequest}}",
-                  "anyoneCanModifyGroup": "{{request.body.anyoneCanModifyGroup}}",
-                  "approveNewUsers": "{{request.body.approveNewUsers}}"
+                  "category": "{{body.category}}",
+                  "title": "{{body.title}}",
+                  "anyoneCanAcceptRequest": "{{body.anyoneCanAcceptRequest}}",
+                  "anyoneCanModifyGroup": "{{body.anyoneCanModifyGroup}}",
+                  "approveNewUsers": "{{body.approveNewUsers}}"
                 },
                 "populate": false
               }
             }
           },
-          "userId": "{{request.user.id}}",
+          "userId": "{{user.id}}",
           "populate": true
         }
       }
@@ -38,5 +38,126 @@
       "...": "{{CreateEvent.data}}",
       "group": "{{CreateGroup}}"
     }
+  },
+  {
+    "name": "UpdateEventStatus",
+    "httpMethod": "put",
+    "url": "/events/:id/status",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "UpdateEventStatus",
+        "pattern": "@event/update_status",
+        "payload": {
+          "id": "{{params.id}}",
+          "status": "{{body.status}}",
+          "userId": "{{user.id}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{UpdateEventStatus.data}}"
+  },
+  {
+    "name": "GetJoinedEvents",
+    "httpMethod": "get",
+    "url": "/events/joined",
+    "steps": [
+      {
+        "name": "GetEventsByGroupIds",
+        "$$type": "MS_CALL",
+        "pattern": "@event/get_by_groupIds",
+        "payload": {
+          "groupIds": {
+            "$$type": "MS_CALL",
+            "name": "GetUserGroups",
+            "pattern": "@event/get_by_userId",
+            "readFrom": "data",
+            "map": "id",
+            "payload": {
+              "userId": "{{user.id}}",
+              "populate": false
+            }
+          },
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{GetEventsByGroupIds.data}}"
+  },
+  {
+    "name": "GetEvents",
+    "httpMethod": "get",
+    "url": "/events",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "GetEvents",
+        "pattern": "@event/search",
+        "payload": {
+          "params": "{{queryParams}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{GetEvents.data}}"
+  },
+  {
+    "name": "GetEventById",
+    "httpMethod": "get",
+    "url": "/events/:id",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "GetEventById",
+        "pattern": "@event/get_by_id",
+        "payload": {
+          "params": {
+            "id": "{{params.id}}",
+            "populate": true
+          }
+        }
+      }
+    ],
+    "output": "{{GetEventById.data}}"
+  },
+  {
+    "name": "UpdateEvent",
+    "httpMethod": "put",
+    "url": "/events/:id",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "UpdateEvent",
+        "pattern": "@event/update",
+        "payload": {
+          "params": {
+            "id": "{{params.id}}",
+            "userId": "{{user.id}}",
+            "populate": true
+          }
+        }
+      }
+    ],
+    "output": "{{UpdateEvent.data}}"
+  },
+  {
+    "name": "DeleteEvent",
+    "httpMethod": "put",
+    "url": "/events/:id",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "UpdateEvent",
+        "pattern": "@event/delete",
+        "payload": {
+          "params": {
+            "id": "{{params.id}}",
+            "userId": "{{user.id}}"
+          }
+        }
+      }
+    ],
+    "output": { "success": true }
   }
 ]

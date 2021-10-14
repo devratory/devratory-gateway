@@ -10,7 +10,7 @@ export class Scope {
     return get(this._scope, key, null);
   }
 
-  set(key: string, value: any) {
+  set<V>(key: string, value: V) {
     if (this._scope[key]) {
       console.warn('OVERRIDE ATTEMPT', key, this._scope[key], value);
     }

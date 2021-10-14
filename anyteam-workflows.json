@@ -1,0 +1,507 @@
+[
+  {
+    "name": "GetNotificationById",
+    "httpMethod": "get",
+    "url": "/notifications/:id",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "GetNotificationById",
+        "pattern": "@notification/get_by_id",
+        "payload": {
+          "id": "{{params.id}}",
+          "populate": true
+        }
+      },
+      {
+        "$$type": "MS_CALL",
+        "name": "GetRelatedGroup",
+        "pattern": "@group/get_by_id",
+        "payload": {
+          "id": "{{GetNotificationById.data.relatedDocumentId}}",
+          "userId": "{{user.id}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": {
+      "...": "{{GetNotificationById.data}}",
+      "relatedDocument": "GetRelatedGroup.data"
+    }
+  },
+  {
+    "name": "UpdateNotificationStatus",
+    "httpMethod": "put",
+    "url": "/notifications/:id/status",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "UpdateNotificationStatus",
+        "pattern": "@notification/update_status",
+        "payload": {
+          "ids": ["{{params.id}}"],
+          "userId": "{{user.id}}",
+          "status": "{{body.status}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{UpdateNotificationStatus.data}}"
+  },
+  {
+    "name": "RegisterDeviceToken",
+    "httpMethod": "post",
+    "url": "/notifications/device-token",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "RegisterDeviceToken",
+        "pattern": "@notification/register_device_token",
+        "payload": {
+          "userId": "{{user.id}}",
+          "token": "{{body.token}}",
+          "device": "{{body.device}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{RegisterDeviceToken.data}}"
+  },
+  {
+    "name": "RemoveDeviceToken",
+    "httpMethod": "delete",
+    "url": "/notifications/device-token/:id",
+    "steps": [
+      {
+        "name": "RemoveDeviceToken",
+        "$$type": "MS_CALL",
+        "pattern": "@notification/remove_device_token",
+        "payload": {
+          "id": "{{params.id}}",
+          "userId": "{{user.id}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{RemoveDeviceToken.data}}"
+  },
+  {
+    "name": "CreateEvent",
+    "httpMethod": "post",
+    "url": "/events",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "CreateEvent",
+        "pattern": "@event/create",
+        "payload": {
+          "event": {
+            "...": "{{request.body}}",
+            "group": {
+              "$$type": "MS_CALL",
+              "name": "CreateGroup",
+              "readFrom": "data.id",
+              "pattern": "@group/create",
+              "payload": {
+                "userId": "{{user.id}}",
+                "group": {
+                  "category": "{{body.category}}",
+                  "title": "{{body.title}}",
+                  "anyoneCanAcceptRequest": "{{body.anyoneCanAcceptRequest}}",
+                  "anyoneCanModifyGroup": "{{body.anyoneCanModifyGroup}}",
+                  "approveNewUsers": "{{body.approveNewUsers}}"
+                },
+                "populate": false
+              }
+            }
+          },
+          "userId": "{{user.id}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": {
+      "...": "{{CreateEvent.data}}",
+      "group": "{{CreateGroup}}"
+    }
+  },
+  {
+    "name": "UpdateEventStatus",
+    "httpMethod": "put",
+    "url": "/events/:id/status",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "UpdateEventStatus",
+        "pattern": "@event/update_status",
+        "payload": {
+          "id": "{{params.id}}",
+          "status": "{{body.status}}",
+          "userId": "{{user.id}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{UpdateEventStatus.data}}"
+  },
+  {
+    "name": "GetJoinedEvents",
+    "httpMethod": "get",
+    "url": "/events/joined",
+    "steps": [
+      {
+        "name": "GetEventsByGroupIds",
+        "$$type": "MS_CALL",
+        "pattern": "@event/get_by_groupIds",
+        "payload": {
+          "groupIds": {
+            "$$type": "MS_CALL",
+            "name": "GetUserGroups",
+            "pattern": "@event/get_by_userId",
+            "readFrom": "data",
+            "map": "id",
+            "payload": {
+              "userId": "{{user.id}}",
+              "populate": false
+            }
+          },
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{GetEventsByGroupIds.data}}"
+  },
+  {
+    "name": "GetEvents",
+    "httpMethod": "get",
+    "url": "/events",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "GetEvents",
+        "pattern": "@event/search",
+        "payload": {
+          "params": "{{queryParams}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{GetEvents.data}}"
+  },
+  {
+    "name": "GetEventById",
+    "httpMethod": "get",
+    "url": "/events/:id",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "GetEventById",
+        "pattern": "@event/get_by_id",
+        "payload": {
+          "id": "{{params.id}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{GetEventById.data}}"
+  },
+  {
+    "name": "UpdateEvent",
+    "httpMethod": "put",
+    "url": "/events/:id",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "UpdateEvent",
+        "pattern": "@event/update",
+        "payload": {
+          "id": "{{params.id}}",
+          "userId": "{{user.id}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{UpdateEvent.data}}"
+  },
+  {
+    "name": "DeleteEvent",
+    "httpMethod": "put",
+    "url": "/events/:id",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "UpdateEvent",
+        "pattern": "@event/delete",
+        "payload": {
+          "id": "{{params.id}}",
+          "userId": "{{user.id}}"
+        }
+      }
+    ],
+    "output": { "success": true }
+  },
+  {
+    "name": "GetUserMessages",
+    "httpMethod": "get",
+    "url": "/messages",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "GetUserMessages",
+        "pattern": "@message/get_all",
+        "payload": {
+          "groupId": {
+            "$$type": "MS_CALL",
+            "name": "GetUserGroups",
+            "readFrom": "data[].id",
+            "pattern": "@group/get_by_userId",
+            "payload": {
+              "userId": "{{user.id}}",
+              "populate": false
+            }
+          }
+        }
+      }
+    ],
+    "output": "{{GetUserMessages.data}}"
+  },
+  {
+    "name": "CreateRequest",
+    "httpMethod": "post",
+    "url": "/requests",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "CreateRequest",
+        "pattern": "@request/create",
+        "payload": {
+          "request": {
+            "...": "{{body}}",
+            "createdBy": "{{user.id}}",
+            "receiverIds": {
+              "$$type": "MS_CALL",
+              "name": "GetModeratorsOfRelatedDocument",
+              "readFrom": "data",
+              "pattern": "@group/get_moderators_for_document",
+              "payload": { "id": "{{body.requestedForDocumentId}}" }
+            }
+          },
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{CreateRequest.data}}"
+  },
+  {
+    "name": "UpdateRequestStatus",
+    "httpMethod": "put",
+    "url": "/requests/:id/status",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "UpdateRequestStatus",
+        "pattern": "@request/update_status",
+        "payload": {
+          "id": "{{params.id}}",
+          "status": "{{body.status}}",
+          "userId": "{{user.id}}",
+          "populate": false
+        }
+      }
+    ],
+    "output": "{{UpdateRequestStatus.data}}"
+  },
+  {
+    "name": "GetUserRequests",
+    "httpMethod": "put",
+    "url": "/requests/:id/status",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "GetUserRequests",
+        "pattern": "@request/get_by_userId",
+        "payload": {
+          "userId": "{{user.id}}",
+          "populate": true
+        }
+      }
+    ],
+    "output": "{{GetUserRequests.data}}"
+  },
+  {
+    "name": "CreateReview",
+    "httpMethod": "post",
+    "url": "/reviews",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "CreateReview",
+        "pattern": "@review/create",
+        "payload": { "review": "{{body}}", "userId": "{{user.id}}" }
+      }
+    ],
+    "output": "{{CreateReview.data}}"
+  },
+  {
+    "name": "CreateBulkReviews",
+    "httpMethod": "post",
+    "url": "/reviews/bulk",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "AcceptRequestToReviewPlayers",
+        "pattern": "@request/accept_request",
+        "payload": { "id": "{{body.requestId}}", "userId": "{{user.id}}" }
+      },
+      {
+        "$$type": "MS_CALL",
+        "name": "CreateReviewsBulk",
+        "pattern": "@review/create_many",
+        "payload": { "reviews": "{{body.reviews}}", "userId": "{{user.id}}" }
+      }
+      
+    ],
+    "output": "{{CreateReviewsBulk.data}}"
+  },
+  {
+    "name": "Login",
+    "httpMethod": "post",
+    "url": "/tokens",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "Login",
+        "pattern": "@token/create_for_credentials",
+        "payload": "{{body}}"
+      }
+    ],
+    "output": "{{Login.data}}"
+  },
+  {
+    "name": "LoginWithGoogle",
+    "httpMethod": "post",
+    "url": "/tokens/google",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "LoginWithGoogle",
+        "pattern": "@token/create_from_google_token",
+        "payload": {
+          "token": "{{body.token}}"
+        }
+      }
+    ],
+    "output": "{{LoginWithGoogle.data}}"
+  },
+  {
+    "name": "GetAuthorizedUserDetails",
+    "httpMethod": "get",
+    "url": "/users",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "GetUserById",
+        "pattern": "@user/get_by_id",
+        "payload": {
+          "id": "{{user.id}}",
+          "populate": true,
+          "full": true
+        }
+      }
+    ],
+    "output": "{{GetUserById.data}}"
+  },
+  {
+    "name": "CreateUser",
+    "httpMethod": "post",
+    "url": "/users",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "CreateUser",
+        "pattern": "@user/create",
+        "payload": "{{body}}"
+      },
+      {
+        "$$type": "MS_CALL",
+        "name": "SendEmailVerification",
+        "pattern": "@mailer/send",
+        "payload": {
+          "to": "{{CreateUser.data.email}}",
+          "template": "confirmation",
+          "subject": "Confirm your email",
+          "context": { 
+            "name": "{{CreateUser.data.profile.firstName}}", 
+            "token": {
+              "$$type": "MS_CALL",
+              "name": "CreateEmailVerificationToken",
+              "pattern": "@token/create_expirable_token",
+              "readFrom": "data",
+              "payload": {
+                "payload": { "email": "{{CreateUser.data.email}}" },
+                "expiresIn": "30d"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "output": "{{CreateUser.data}}"
+  },
+  {
+    "name": "GetGeoDataByIP",
+    "httpMethod": "get",
+    "url": "/users/geoip",
+    "steps": [
+      {
+        "$$type": "HTTP_CALL",
+        "name": "GeoResponse",
+        "url": "https://freegeoip.app/json/{{clientIp}}",
+        "httpMethod": "get"
+      }
+    ],
+    "output": "{{GeoResponse.data}}"
+  },
+  {
+    "name": "ResetPassword",
+    "httpMethod": "post",
+    "url": "/users/reset-password-link",
+    "steps": [
+      {
+        "$$type": "MS_CALL",
+        "name": "User",
+        "pattern": "@user/get_by_email",
+        "payload": {
+          "email": "{{body.email}}"
+
+        }
+      },
+      {
+        "$$type": "MS_CALL",
+        "name": "CreateToken",
+        "pattern": "@token/create_expirable_token",
+        "payload": {
+          "payload": {
+            "email": "{{UserResponse.data.email}}"
+          }
+
+        }
+      },
+      {
+        "$$type": "MS_CALL",
+        "name": "SendLink",
+        "pattern": "@mailer/send",
+        "payload": {
+          "to": "{{UserResponse.data.email}}",
+          "template": "reset-password",
+          "subject": "Reset password",
+          "context": {
+            "token": "{{CreateToken.data}}"
+          }
+        }
+      }
+    ],
+    "output": {"linkSent":  true}
+  },
+  {}
+]

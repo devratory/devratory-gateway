@@ -1,15 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { PayloadSerializer } from './payload-serializer';
 import { Scope } from './scope';
-import { StepExecutor } from './step.executor';
-import { IStep } from './step.interface';
+import { createStepFromJSON, Step } from './step';
 import { IWorkflow } from './workflow.interface';
 
 export class WorkflowExecutor {
   private _workflow: IWorkflow;
-  private scope: Scope;
-  private stepExecutor: StepExecutor;
-  private serializer: PayloadSerializer;
+  private _scope: Scope;
+  private _serializer: PayloadSerializer;
 
   constructor(
     workflowJSON: IWorkflow,
@@ -18,7 +16,7 @@ export class WorkflowExecutor {
     private next: NextFunction
   ) {
     this._workflow = workflowJSON;
-    this.scope = new Scope({
+    this._scope = new Scope({
       request: {
         ...request,
         user: {
@@ -26,34 +24,40 @@ export class WorkflowExecutor {
         },
       },
     });
-    this.stepExecutor = new StepExecutor(this.scope);
-    this.serializer = new PayloadSerializer(this.scope, this.stepExecutor.execute.bind(this.stepExecutor));
+    this._serializer = new PayloadSerializer(this._scope, this._executeStep.bind(this));
   }
 
   async execute() {
     console.log(`Executing workflow: ${this._workflow.name}`);
-    await this.executeSteps(this._workflow.steps);
+    await this._executeSteps(this._workflow.steps);
 
-    const result = await this.serializer.serialize(this._workflow.output);
+    const result = await this._serializer.serialize(this._workflow.output);
     if (result) {
       console.log('Returning response', result);
       this.response.json(result);
     }
   }
 
-  async executeSteps(steps: IStep[]) {
+  private async _executeSteps(steps: Step[]) {
     console.log(`Starting the execution of ${steps.length} steps`);
     for (let step of steps) {
       if (Array.isArray(step) && step.length > 1) {
         // If needed a different scope can be provided here for nested StepsExecutor
-        await this.executeSteps(step as IStep[]);
+        await this._executeSteps(step as Step[]);
       } else {
         const singleStep = Array.isArray(step) ? step[0] : step;
-        await this.stepExecutor.execute({
-          ...(step as IStep),
-          payload: await this.serializer.serialize(singleStep.payload),
-        });
+        await this._executeStep(singleStep);
       }
+    }
+  }
+
+  private async _executeStep(stepData: Step) {
+    const step = createStepFromJSON(stepData, this._scope, this._serializer);
+    if (step) {
+      console.debug(`Executing step: ${step.name}`);
+      return await step.execute();
+    } else {
+      console.log('No handler found for step type', step.$$type);
     }
   }
 }

@@ -1,16 +1,4 @@
-export enum StepType {
-  MicroserviceCall = 'MS_CALL',
-  ExecuteCode = 'EXEC_CODE',
-  Switch = 'SWITCH',
-}
-
-export interface IStep {
-  $$type: StepType;
-  name: string;
-  pattern: string | object;
-  payload: IStepPayload;
-  readFrom: string | null;
-}
+import { Step } from './base.step';
 
 export interface IStepPayload {
   /**
@@ -22,6 +10,7 @@ export interface IStepPayload {
    *                      lastName: {
    *                         type: StepType.MicroserviceCall
    *                         pattern: '@category/get_all',
+   *
    *                         payload: {
    *                          status: 'active' // hardcoded string
    *                         }
@@ -30,5 +19,5 @@ export interface IStepPayload {
    *                }
    *
    */
-  [key: string]: string | IStep | IStepPayload;
+  [key: string]: string | Step | IStepPayload;
 }

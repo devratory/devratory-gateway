@@ -1,8 +1,8 @@
 import { ROOT_LEVEL_ASSIGNMENT_KEY } from './constants';
 import { Scope } from './scope';
-import { IStep, IStepPayload } from './step.interface';
+import { IStepPayload, Step } from './step';
 
-function isStep(value: IStep | IStepPayload) {
+function isStep(value: Step | IStepPayload) {
   // If $$type is defined, we'll assume this is a step
   return typeof value.$$type !== 'undefined';
 }
@@ -10,7 +10,7 @@ function isStep(value: IStep | IStepPayload) {
 export class PayloadSerializer {
   constructor(
     private _scope: Scope,
-    private _executeStep: (step: IStep) => Promise<any> = () => Promise.resolve(null)
+    private _executeStep: <O>(step: Step) => Promise<O> = () => Promise.resolve(null)
   ) {}
 
   async serialize(payload: IStepPayload) {
@@ -33,12 +33,12 @@ export class PayloadSerializer {
     return serialized;
   }
 
-  private async _serializeValue(value: string | IStep | IStepPayload) {
+  private async _serializeValue(value: string | Step | IStepPayload) {
     if (typeof value === 'string') {
       return await this._serializeString(value);
     } else if (typeof value === 'object') {
       // Check if this is a step to execute, otherwise serialize as a payload
-      return isStep(value) ? this._executeStep(value as IStep) : this.serialize(value as IStepPayload);
+      return isStep(value) ? this._executeStep(value as Step) : this.serialize(value as IStepPayload);
     } else {
       // Value doesn't need serialization
       return value;
