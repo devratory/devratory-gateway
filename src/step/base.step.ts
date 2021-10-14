@@ -1,5 +1,6 @@
-import { Serializer } from '../serializer';
+import _ from 'lodash';
 import { Scope } from '../scope';
+import { Serializer } from '../serializer';
 
 export abstract class Step {
   $$type: StepType;
@@ -15,6 +16,16 @@ export abstract class Step {
   }
 
   abstract execute<O>(): Promise<O>;
+
+  readFromObject(obj: any) {
+    if (this.readFrom) {
+      const [path, mapProperty] = this.readFrom.split('[].');
+      const value = _.get(obj, path, null);
+      return mapProperty ? _.map(value, mapProperty) : value;
+    } else {
+      return obj;
+    }
+  }
 }
 
 export enum StepType {
