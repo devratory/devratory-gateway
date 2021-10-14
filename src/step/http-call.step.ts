@@ -1,4 +1,5 @@
 import { Step } from './base.step';
+import { httpService } from '../services';
 
 export class HttpCallStep extends Step {
   httpMethod: string;
@@ -14,6 +15,7 @@ export class HttpCallStep extends Step {
   };
 
   async execute<O>() {
+    // TODO: do something with httpService
     return Promise.resolve({}) as Promise<O>;
   }
 }

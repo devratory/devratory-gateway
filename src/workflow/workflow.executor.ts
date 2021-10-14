@@ -1,13 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
-import { PayloadSerializer } from './payload-serializer';
-import { Scope } from './scope';
-import { createStepFromJSON, Step } from './step';
+import { Serializer } from '../serializer';
+import { Scope } from '../scope';
+import { HttpCallStep, MicroserviceCallStep, Step, StepType, SwitchStep } from '../step';
 import { IWorkflow } from './workflow.interface';
 
 export class WorkflowExecutor {
   private _workflow: IWorkflow;
   private _scope: Scope;
-  private _serializer: PayloadSerializer;
+  private _serializer: Serializer;
 
   constructor(
     workflowJSON: IWorkflow,
@@ -24,7 +24,7 @@ export class WorkflowExecutor {
         },
       },
     });
-    this._serializer = new PayloadSerializer(this._scope, this._executeStep.bind(this));
+    this._serializer = new Serializer(this._scope, this._executeStep.bind(this));
   }
 
   async execute() {
@@ -52,12 +52,28 @@ export class WorkflowExecutor {
   }
 
   private async _executeStep(stepData: Step) {
-    const step = createStepFromJSON(stepData, this._scope, this._serializer);
+    const step = this._createStepFromJSON(stepData);
     if (step) {
       console.debug(`Executing step: ${step.name}`);
       return await step.execute();
     } else {
       console.log('No handler found for step type', step.$$type);
+    }
+  }
+
+  private _createStepFromJSON(step: Partial<Step>): Step {
+    switch (step.$$type) {
+      case StepType.HttpCall: {
+        return new HttpCallStep(step, this._scope, this._serializer);
+      }
+      case StepType.MicroserviceCall: {
+        return new MicroserviceCallStep(step, this._scope, this._serializer);
+      }
+      case StepType.Switch: {
+        return new SwitchStep(step, this._scope, this._serializer);
+      }
+      default:
+        return null;
     }
   }
 }

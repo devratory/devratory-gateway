@@ -7,7 +7,7 @@ function isStep(value: Step | IStepPayload) {
   return typeof value.$$type !== 'undefined';
 }
 
-export class PayloadSerializer {
+export class Serializer {
   constructor(
     private _scope: Scope,
     private _executeStep: <O>(step: Step) => Promise<O> = () => Promise.resolve(null)

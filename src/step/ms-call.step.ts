@@ -1,7 +1,6 @@
 import _ from 'lodash';
-import { msService } from '../ms.service';
-import { IStepPayload } from './step-payload.interface';
-import { Step } from './base.step';
+import { msService } from '../services';
+import { Step, IStepPayload } from './base.step';
 
 export class MicroserviceCallStep extends Step {
   // MS properties
