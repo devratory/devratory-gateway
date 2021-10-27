@@ -12,6 +12,7 @@ export class MicroserviceCallStep extends Step {
     const msResponse = await msService.call<O>(this.pattern, payload);
     const response = this.readFromObject(msResponse);
     // Store it in scope for other steps to access.
+    console.log(`Setting ${this.name} as `, response);
     this._scope.set(this.name, response);
     console.debug(`Stored value for ${this.name} in scope`, JSON.stringify(response, null, 2));
     return response as O;

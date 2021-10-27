@@ -23,6 +23,7 @@ export class WorkflowExecutor {
           id: 'test_user_id1',
         },
       },
+      body: request.body
     });
     this._serializer = new Serializer(this._scope, this._executeStep.bind(this));
   }

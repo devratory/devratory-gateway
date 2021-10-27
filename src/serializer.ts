@@ -13,7 +13,10 @@ export class Serializer {
     private _executeStep: <O>(step: Step) => Promise<O> = () => Promise.resolve(null)
   ) {}
 
-  async serialize(payload: IStepPayload) {
+  async serialize(payload: IStepPayload | string) {
+    if (typeof payload === 'string' && payload.startsWith('{{') && payload.endsWith('}}')) {
+      return this._serializeValue(payload);
+    }
     console.debug('Serializing payload', JSON.stringify(payload, null, 2));
     const keys = Object.keys(payload).filter((k) => k !== ROOT_LEVEL_ASSIGNMENT_KEY);
     let serialized = {};
