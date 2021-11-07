@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { Serializer } from '../serializer';
 import { Scope } from '../scope';
-import { HttpCallStep, MicroserviceCallStep, Step, StepType, SwitchStep } from '../step';
+import { ExecCodeStep, HttpCallStep, MicroserviceCallStep, Step, StepType, SwitchStep } from '../step';
 import { IWorkflow } from './workflow.interface';
 
 export class WorkflowExecutor {
@@ -9,33 +9,27 @@ export class WorkflowExecutor {
   private _scope: Scope;
   private _serializer: Serializer;
 
-  constructor(
-    workflowJSON: IWorkflow,
-    private request: Request,
-    private response: Response,
-    private next: NextFunction
-  ) {
+  constructor(workflowJSON: IWorkflow, request: Request, private response: Response, private next: NextFunction) {
     this._workflow = workflowJSON;
     this._scope = new Scope({
-      request: {
-        ...request,
-        user: {
-          id: 'test_user_id1',
-        },
-      },
-      body: request.body
+      user: (request as any).user,
+      headers: request.headers,
+      params: request.params,
+      queryParams: request.query,
+      body: request.body,
     });
     this._serializer = new Serializer(this._scope, this._executeStep.bind(this));
   }
 
-  async execute() {
+  async execute(responseWithJSON = true) {
     console.log(`Executing workflow: ${this._workflow.name}`);
     await this._executeSteps(this._workflow.steps);
 
     const result = await this._serializer.serialize(this._workflow.output);
     if (result) {
-      console.log('Returning response', result);
-      this.response.json(result);
+      console.log('Returning response', result, 'From scope', this._scope);
+      responseWithJSON && this.response.json(result);
+      return result;
     }
   }
 
@@ -72,6 +66,9 @@ export class WorkflowExecutor {
       }
       case StepType.Switch: {
         return new SwitchStep(step, this._scope, this._serializer);
+      }
+      case StepType.ExecuteCode: {
+        return new ExecCodeStep(step, this._scope, this._serializer);
       }
       default:
         return null;

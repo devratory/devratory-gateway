@@ -5,5 +5,6 @@ export interface IWorkflow {
   url: string;
   httpMethod: 'post' | 'get' | 'put' | 'delete' | 'patch';
   steps: Step[];
+  authWorkflow?: string;
   output: IStepPayload;
 }
